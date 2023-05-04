@@ -4,7 +4,7 @@
 MITM server for software testing that supports both user defined wasm functions and WS connection.
 https://hub.docker.com/repository/docker/rustropy/wasm_mock_server/
 
-<img src="https://rustropy.netlify.app/images/wasmtesting.png" width="200" height="200">
+<img src="https://rustropy.netlify.app/images/wasmtesting.png" width="600" height="400">
 
 ## Getting Started
 docker pull rustropy/wasm_mock_server:0.1.0
