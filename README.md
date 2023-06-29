@@ -17,3 +17,18 @@ docker run -p 20825:20825 -p 20810:20810 -p 3335:3335 wasm_mock_server
 
 ## HTTPs Proxy
 SSL Cert can be found in GET /cert/pem
+
+## Video Resources
+| Video Description  | Video Link |
+| ------------- | ------------- |
+| [Software testing] Wasm mock server websocket mitm (1)  | https://www.youtube.com/watch?v=xuspE_u71Og  |
+| 【软件测试】wasm mock server Websocket 示范  | https://www.bilibili.com/video/BV1kg4y157hE/?spm_id_from=333.999.0.0&vd_source=8513215e56d2a613eb870e5ccc630e88  |
+| 【rust conf china】应用WAPC做软件测试工具   | https://www.bilibili.com/video/BV1ws4y1k7pR/?spm_id_from=333.999.0.0&vd_source=8513215e56d2a613eb870e5ccc630e88  |
+
+## Roadmap
+| Task  | Completion |
+| ------------- | ------------- |
+| Consolidate all endpoints into one && remove target url parameter  |   |
+| Wasm Playground  |   |
+| Web UI   |   |
+| Live deployment   |   |
