@@ -29,6 +29,6 @@ SSL Cert can be found in GET /cert/pem
 | Task  | Completion | Detail |
 | ------------- | ------------- | ------------- |
 | Consolidate all endpoints into one && remove target url parameter  |  |
-| Wasm Playground  | :heavy_check_mark:    |  |
+| Wasm Playground  | ✅    |  |
 | Web UI   |   |  |
 | Live deployment   |   |  |
