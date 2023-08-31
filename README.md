@@ -26,9 +26,9 @@ SSL Cert can be found in GET /cert/pem
 | 【rust conf china】应用WAPC做软件测试工具   | https://www.bilibili.com/video/BV1ws4y1k7pR/?spm_id_from=333.999.0.0&vd_source=8513215e56d2a613eb870e5ccc630e88  |
 
 ## Roadmap
-| Task  | Completion |
-| ------------- | ------------- |
-| Consolidate all endpoints into one && remove target url parameter  |   |
-| Wasm Playground  |   |
-| Web UI   |   |
-| Live deployment   |   |
+| Task  | Completion | Detail |
+| ------------- | ------------- | ------------- |
+| Consolidate all endpoints into one && remove target url parameter  |  |
+| Wasm Playground  | :heavy_check_mark:    |  |
+| Web UI   |   |  |
+| Live deployment   |   |  |
