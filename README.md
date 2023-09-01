@@ -6,6 +6,8 @@ https://hub.docker.com/repository/docker/rustropy/wasm_mock_server/
 
 <img src="https://rustropy.netlify.app/images/wasmtesting.png" width="600" height="400">
 
+![Alt Text](./desktop.gif)
+
 ## Getting Started
 Head to https://github.com/wasmmock/wasm_mock_server/releases and download the relevant zip. Unzip the binary and run the binary.
 
