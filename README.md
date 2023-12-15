@@ -72,3 +72,13 @@ Please check this stackoverflow for detail: https://stackoverflow.com/questions/
 | Community Engagement   |    | Slack / Discord / X |
 | Appium Intergration (POC)  |    | Include python SDK for mobile automation for android emulator |
 | UIautomator Intergration Plus (POC) |    | Using UIautomator's xml and MITM data, predicts possible test cases for mobile application   |
+
+## To build web UI
+- cd ui
+- NODE_OPTIONS=--openssl-legacy-provider yarn build
+- cd ..
+- make generate (this stores the generated common web assets in internal/box/blob.go as golang file)
+- After starting the wasm mock server, go to http://localhost:20825/index.html 
+
+## To run
+- cd runner && go run main.go

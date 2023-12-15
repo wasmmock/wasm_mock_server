@@ -1,0 +1,79 @@
+-----BEGIN CERTIFICATE-----
+MIIDNTCCAh2gAwIBAgIUW8pt3M9cLDFJboyrBaHaZgu9x2UwDQYJKoZIhvcNAQEL
+BQAwKDESMBAGA1UEAwwJbWl0bXByb3h5MRIwEAYDVQQKDAltaXRtcHJveHkwHhcN
+MjMwMTEwMTM1OTUxWhcNMzMwMTA5MTM1OTUxWjAoMRIwEAYDVQQDDAltaXRtcHJv
+eHkxEjAQBgNVBAoMCW1pdG1wcm94eTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+AQoCggEBAKQxP+v2HmkLKoZ/fB5Hm74wtH17TgtvFp6uSq7cmYW9+BD6l95oUxWG
+hJRqNekW2I5Xi5uz2MKZb7RnOl22MPF51SD/rLDFSVhn33WEvqblcdJ4ehffZI04
+ZaMNZH0rbcQtjkXUhfvgyPUqCImFK1GesRg16W9E6tOT81qEjM1XWF8giFIUn9E+
+uiNAlmk/GWSZueK7eU/+LKEMJjeOLvcUKPi6DDks0WrrEnWqoTlicOtgbmbJTqV/
+fzopRfnAaoL62/MLD+SGHNG4Xnua0NU5xVs4omMel9Q+xbWMRjgG/xRSA7EViJkU
+KZ1HEAD3fgkBuvvBJRIjAtJl5wz50DECAwEAAaNXMFUwDwYDVR0TAQH/BAUwAwEB
+/zATBgNVHSUEDDAKBggrBgEFBQcDATAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYE
+FFVjL/yGhTnQ17PmWf5tz5XEN7otMA0GCSqGSIb3DQEBCwUAA4IBAQCN22yS3VAs
+a0ideNn3DXlubHVEt2rk+/btMtoXTgWOx5Ew0lI5RaHNyDAZm3vAId3Bs2okD52t
+ZKkcWgjE9MlyoYXgGfRwoy/W+jszkOFvTYbkpvWReA1rMXVBcoQJCTdpNJx4jxAB
+j3zZNpdZADFotAzXYpuGS6N37o95HjipVteCmkmtsAG7RK0kEJAuThJU3+Jc45u6
+CFZ1b0TVImJSjnmcgcxyn0uvP1ZSckKJQde/P2UiVRXD3VRFKl49H2aOf4jcH8II
+ka1BxSDp90uoES2HX95ilq4ehtjUYmBCU7PMNiuW4t4va+AsjyGl4laQf0PiMtkv
+SOfoLSe0vi8+
+-----END CERTIFICATE-----
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            5b:ca:6d:dc:cf:5c:2c:31:49:6e:8c:ab:05:a1:da:66:0b:bd:c7:65
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: CN=mitmproxy, O=mitmproxy
+        Validity
+            Not Before: Jan 10 13:59:51 2023 GMT
+            Not After : Jan  9 13:59:51 2033 GMT
+        Subject: CN=mitmproxy, O=mitmproxy
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                RSA Public-Key: (2048 bit)
+                Modulus:
+                    00:a4:31:3f:eb:f6:1e:69:0b:2a:86:7f:7c:1e:47:
+                    9b:be:30:b4:7d:7b:4e:0b:6f:16:9e:ae:4a:ae:dc:
+                    99:85:bd:f8:10:fa:97:de:68:53:15:86:84:94:6a:
+                    35:e9:16:d8:8e:57:8b:9b:b3:d8:c2:99:6f:b4:67:
+                    3a:5d:b6:30:f1:79:d5:20:ff:ac:b0:c5:49:58:67:
+                    df:75:84:be:a6:e5:71:d2:78:7a:17:df:64:8d:38:
+                    65:a3:0d:64:7d:2b:6d:c4:2d:8e:45:d4:85:fb:e0:
+                    c8:f5:2a:08:89:85:2b:51:9e:b1:18:35:e9:6f:44:
+                    ea:d3:93:f3:5a:84:8c:cd:57:58:5f:20:88:52:14:
+                    9f:d1:3e:ba:23:40:96:69:3f:19:64:99:b9:e2:bb:
+                    79:4f:fe:2c:a1:0c:26:37:8e:2e:f7:14:28:f8:ba:
+                    0c:39:2c:d1:6a:eb:12:75:aa:a1:39:62:70:eb:60:
+                    6e:66:c9:4e:a5:7f:7f:3a:29:45:f9:c0:6a:82:fa:
+                    db:f3:0b:0f:e4:86:1c:d1:b8:5e:7b:9a:d0:d5:39:
+                    c5:5b:38:a2:63:1e:97:d4:3e:c5:b5:8c:46:38:06:
+                    ff:14:52:03:b1:15:88:99:14:29:9d:47:10:00:f7:
+                    7e:09:01:ba:fb:c1:25:12:23:02:d2:65:e7:0c:f9:
+                    d0:31
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                55:63:2F:FC:86:85:39:D0:D7:B3:E6:59:FE:6D:CF:95:C4:37:BA:2D
+    Signature Algorithm: sha256WithRSAEncryption
+         8d:db:6c:92:dd:50:2c:6b:48:9d:78:d9:f7:0d:79:6e:6c:75:
+         44:b7:6a:e4:fb:f6:ed:32:da:17:4e:05:8e:c7:91:30:d2:52:
+         39:45:a1:cd:c8:30:19:9b:7b:c0:21:dd:c1:b3:6a:24:0f:9d:
+         ad:64:a9:1c:5a:08:c4:f4:c9:72:a1:85:e0:19:f4:70:a3:2f:
+         d6:fa:3b:33:90:e1:6f:4d:86:e4:a6:f5:91:78:0d:6b:31:75:
+         41:72:84:09:09:37:69:34:9c:78:8f:10:01:8f:7c:d9:36:97:
+         59:00:31:68:b4:0c:d7:62:9b:86:4b:a3:77:ee:8f:79:1e:38:
+         a9:56:d7:82:9a:49:ad:b0:01:bb:44:ad:24:10:90:2e:4e:12:
+         54:df:e2:5c:e3:9b:ba:08:56:75:6f:44:d5:22:62:52:8e:79:
+         9c:81:cc:72:9f:4b:af:3f:56:52:72:42:89:41:d7:bf:3f:65:
+         22:55:15:c3:dd:54:45:2a:5e:3d:1f:66:8e:7f:88:dc:1f:c2:
+         08:91:ad:41:c5:20:e9:f7:4b:a8:11:2d:87:5f:de:62:96:ae:
+         1e:86:d8:d4:62:60:42:53:b3:cc:36:2b:96:e2:de:2f:6b:e0:
+         2c:8f:21:a5:e2:56:90:7f:43:e2:32:d9:2f:48:e7:e8:2d:27:
+         b4:be:2f:3e

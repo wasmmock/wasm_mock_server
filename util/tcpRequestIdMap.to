@@ -1,0 +1,17 @@
+package util
+
+import (
+	"sync"
+)
+
+type TcpReq struct {
+	Payload []byte
+	String  string
+	Index   int
+}
+
+//tcpRequestIdMap
+type SafeTcpRequestIdMap struct {
+	Mu sync.Mutex
+	Db map[string]map[string]TcpReq //command, key
+}

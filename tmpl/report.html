@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    body{
+      background-color: #aaab8a !important;
+    }
+    .btn{
+      padding: 0px !important;
+      font-size: 11px !important;
+    }
+    .container {
+      height: 115px;
+      position: relative;
+    }
+    .topright {
+      position: absolute;
+      top: 8px;
+      right: 16px;
+      font-size: 14px;
+    }
+    .topleft{
+      position: absolute;
+      bottom: 5px;
+      left: 10px;
+    }
+    #table_container{
+      width:100%;
+      overflow-x: auto;
+    }
+    #questionaire_table{
+      width:100%;
+    }
+    #questionaire_table tbody .first_col,#questionaire_table thead .first_col{
+        width:20px;
+        float:left;
+        text-align: center;
+    }
+    #questionaire_table tbody .second_col,#questionaire_table thead .second_col{
+        width:300px;
+        float:left;
+    }
+    #questionaire_table tbody .third_col,#questionaire_table thead .third_col{
+        width:5%;
+        float:left;
+    }
+    #questionaire_table tbody td,#questionaire_table thead th{
+        width:300px;
+        float:left;
+        border: 1px solid black;
+    }
+    #questionaire_table tbody{
+        height:70vh;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    #questionaire_table tbody td{
+        height:200px;
+        overflow-y: auto;
+    }
+
+    .overflow_table tr:after {
+      content: ' ';
+      display: block;
+      visibility: hidden;
+      clear: both;
+  }
+    .overflow_table thead, .overflow_table, .overflow_table tr,.overflow_table tr td,.overflow_table tr th { display: block; }
+    .inner_table tbody td{
+      border-left: 0px !important;
+      border-right: 0px !important;
+      height: 4vw !important;
+      font-size: 1.0vw !important;
+    }
+    #second_col_expand{
+      height:18px;
+      font-size:10px;
+    }
+    #third_col_expand{
+      height:18px;
+      font-size:10px;
+    }
+  </style>
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/json-format-highlight@1.0.4/dist/json-format-highlight.js" type="text/javascript" charset="utf-8"></script> 
+  </head>
+<body>
+  <div class="container">
+    <div class="topright">Date:{{.Date}}<br>Time Started:{{.StartTimeFormatted}}
+      <br>Time Ended:{{.EndTimeFormatted}}<br>Duration: {{.Duration}}
+      <br>
+      <table style="border: 1px solid black;">
+        <tr>
+          <td style="border: 1px solid black;padding:5px"><a onclick="this.href='data:text/html;charset=UTF-8,'+encodeURIComponent(document.documentElement.outerHTML)" href="#" download="page.html">Download Report</a>
+          </td>
+          <td style="border: 1px solid black;padding:5px"><a id="downloadLink" href="#" download="data.json">Postman</a></td>
+        </tr>
+      </table>
+    </div>
+    <div class="topleft"><div>{{.TestEndPoint}}</div>
+    <div><span>Total Passes:</span><span stye="green">{{.Passes}}</span><span>/{{.TotalTests}}</span></div></div>
+  </div>
+  <div id="table_container">
+    <Table id="questionaire_table">
+      <thead class="overflow_table">
+        <th class="first_col"></th>
+        <th class="second_col">Steps</th>
+        <th class="third_col"><button id="third_col_expand">Request</button></th>
+        <th>Response</th><th>Expectations</th>
+        <th>Mock</th>
+      </thead>
+      <tbody class="overflow_table">
+        {{range $g,$b:=.Tests}}
+        <tr><td class='filterable-cell first_col' style="font-size:1vw;">{{$b.Index}}.</td>
+          <td class='filterable-cell second_col'>
+            <table class="inner_table">
+              <tbody>
+              {{range $i, $a:= .Steps}}
+                <tr><td style="min-width:15px;width:5%">{{$i}}.</td>
+                  <td style="word-wrap: break-word;width:77%">{{ printf "%.80s" $a.Description }}
+                    {{ $length := len $a.Description }}
+                    {{if gt $length 80}}
+                    ...<button data-response='{{$a.Description}}' class="btn btn-primary btn-s" data-toggle="modal" data-target="#exampleModalLong" data-titleForModal="Expectation" data-jsonformat=false>Expand</button>
+                    {{end}}
+                  </td>
+                  <td style="min-width:35px;width:15%"><span style="color:{{if $a.Pass}}green{{else}}red{{end}}">{{$a.Pass}}</span></td>
+                </tr>
+              {{end}}
+              </tbody>
+            </table>
+          </td>
+          <td class='filterable-cell third_col' style="word-wrap: break-word">{{ printf "%.50s" .Request }}
+            {{ $length := len .Request }}
+            {{if gt $length 50}}
+            ...<button data-response='{{.Request}}' data-duration={{.Duration}} data-start={{.StartTimeFormatted}} data-end={{.EndTimeFormatted}} class="btn btn-primary btn-s" data-toggle="modal" data-target="#exampleModalLong" data-titleForModal="Request">Expand</button>
+            {{end}}
+          </td>
+          <td class='filterable-cell' style="word-wrap: break-word">{{ printf "%.150s" .Response }}
+            {{ $length := len .Response }}
+            {{if gt $length 150}}
+            ...<button data-response='{{.Response}}' class="btn btn-primary btn-s" data-toggle="modal" data-target="#exampleModalLong" data-titleForModal="Response">Expand</button>
+            {{end}}
+          </td>
+        <td>
+          <table class="inner_table">
+            <tbody>
+            {{range $i, $a:= .Expectations}}
+              <tr><td style="min-width:15px;font-size:1vw;width:5%">{{$i}}.</td>
+                <td style="word-wrap: break-word;width:78%">{{ printf "%.150s" $a.Description }}
+                  {{ $length := len $a.Description }}
+                  {{if gt $length 150}}
+                  ...<button data-response='{{$a.Description}}' class="btn btn-primary btn-s" data-toggle="modal" data-target="#exampleModalLong" data-titleForModal="Expectation" data-jsonformat=false>Expand</button>
+                  {{end}}
+                </td>
+                <td style="min-width:35px;width:15%"><span style="color:{{if $a.Pass}}green{{else}}red{{end}}">{{$a.Pass}}</span></td>
+              </tr>
+            {{end}}
+            </tbody>
+          </table>
+        </td>
+        <td style="word-wrap: break-word;">
+          {{range $i,$a:= .MockData}}
+            <span style="color:{{if not $a.Pass}}red{{else}}green{{end}}"><b>Mock:{{$a.Command}}</b></span><br>
+            {{ printf "%.50s" $a.Response }}
+            <button data-response='{{.Response}}' data-request='{{.Request}}' data-duration='{{.Duration}}' data-index='{{.Index}}' data-source='{{.Source}}' data-endtime='{{.EndTime}}' data-traceid='{{.TraceId}}' class="btn btn-primary btn-s" data-toggle="modal" data-target="#exampleModalLong" data-titleForModal="{{$a.Command}}">Expand</button>
+            <br>
+          {{end}}
+        </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </Table>
+    <Table>
+      <thead><th>Background</th>
+        <th>Hits</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="word-wrap: break-word;">
+            {{range $i,$a:= .BackgroundMock}}
+              <b>Mock:{{$a.Command}}</b><br>
+              {{ printf "%.50s" $a.Response }}
+              {{ $length := len $a.Response }}
+              {{if gt $length 50}}
+              ...<button data-response='{{.Response}}' data-request='{{.Request}}' data-duration='{{.Duration}}' data-index='{{.Index}}' data-source='{{.Source}}' data-endtime='{{.EndTime}}' data-traceid='{{.TraceId}}' class="btn btn-primary btn-s" data-toggle="modal" data-target="#exampleModalLong" data-titleForModal="{{$a.Command}}">Expand</button>
+              {{end}}
+              <br>
+            {{end}}
+          </td>
+          <td style="word-wrap: break-word;">
+            {{range $i,$a:= .Hits}}
+              <div><span>command: {{$a.Command}}</span><span>StartTime: {{$a.StartTime}}</span>
+              </div>
+            {{end}}
+          </td>
+        </tr>
+      </tbody>
+    </Table>
+  </div>
+  
+  <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Response</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          ...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+  $("button[data-target='#exampleModalLong']").click(function(event){
+    event.preventDefault();
+    $(".modal-title").html($(this).data("titleformodal"))
+    if (typeof $(this).data("start")!="undefined") { //request
+      var formatted_res = jsonFormatHighlight($(this).data("response"))
+      $("#modalBody").html('<span>Start:'+$(this).data("start")+
+        '</span><span>End:'+$(this).data("end")+'</span><span>Duration:'+
+          $(this).data("duration")+'</span><br><pre>\n'+formatted_res+'\n</pre>');
+    } else if ($(this).data("jsonformat")==false){
+      $("#modalBody").html($(this).data("response"))
+    }else if(typeof $(this).data("index")!="undefined") { //mock
+      var formatted_req = jsonFormatHighlight($(this).data("request"))
+      var formatted_res = jsonFormatHighlight($(this).data("response"))
+      $("#modalBody").html('<div>Index: '+$(this).data("index")+'</div><div>Duration:'+$(this).data("duration")+
+        '</div><div>Source:'+$(this).data("source")+"</div><div>End:"+$(this).data("endtime")+"</div>"+
+        "<div>Traceid:"+$(this).data("traceid")+"</div>"+
+      '<b>request</b><pre>\n'+formatted_req+'\n</pre><b>response</b><pre>\n'+formatted_res+"\n</pre>")
+    } else{//response
+      var formatted_res = jsonFormatHighlight($(this).data("response"))
+      $("#modalBody").html('<pre>\n'+formatted_res+"\n</pre>")
+    }
+  })
+  var i=0;
+  $("#third_col_expand").click(function(){
+    if (i%2 ==0){
+      $(".third_col").css("width","13%")
+    $("#questionaire_table").css("width","107%")
+    }else{
+      $(".third_col").css("width","5%")
+    $("#questionaire_table").css("width","100%")
+    }
+    i+=1;
+  })
+  var encodedJsonString = encodeURIComponent('{{.Postman}}');
+  var downloadLink = document.getElementById("downloadLink");
+  downloadLink.addEventListener("click", function() {
+      downloadLink.href = "data:application/json;charset=utf-8," + encodedJsonString;
+  });
+  $("#show_background").click
+</script>
+</html>
