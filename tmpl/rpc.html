@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>RegisterCommand</title>
+        <link href="http://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet" type="text/css">
+        <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet' type='text/css'>
+        <!-- CSS -->
+        <link rel="stylesheet" href="styles.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="script.js"></script>
+        <style>
+        body { background-color:#fafafa; font-family:'Quicksand';}
+        .container { 
+          margin-left:150px;
+          margin-right: 150px;
+        }
+        .topright {
+          position: absolute;
+          top: 8px;
+          right: 16px;
+          font-size: 14px;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="topright">
+              <a href="/index.html">Home Page</a>
+            </div>
+            <h1>RegisterCommand</h1>
+            <ul id="list-items"></ul>
+            <form class="add-items">
+                <input type="text" class="form-control" id="todo-list-item" placeholder="Register Command">
+                <button class="add" type="submit">Add to List</button>
+            </form>
+            <button id="restart">Restart RPC server</button>
+        </div>
+    <script type="text/javascript">
+      $.get("/rpc_get",function(data){
+        data.split(",").forEach(function(item){
+          $('#list-items').append("<li><span class='item'>" + item + "</span><a class='remove'>x</a><hr></li>");
+        })
+      })
+      $("#restart").click(function(){
+        var list = []
+        $(".item").each(function(i,elm){
+          list.push($(elm).html())
+        })
+        $.post("/rpc_restart",{"commands":list.join(",")},function(data){
+          console.log(data)
+        })
+      })
+    </script>
+    </body>
+</html>
