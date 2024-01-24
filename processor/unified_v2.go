@@ -11,16 +11,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wasmmock/wasm_mock_server/capabilities"
-	"github.com/wasmmock/wasm_mock_server/model"
-	Security "github.com/wasmmock/wasm_mock_server/security"
-	"github.com/wasmmock/wasm_mock_server/tcpproxy"
-	"github.com/wasmmock/wasm_mock_server/util"
 	"github.com/audiolion/ipip"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	wapc "github.com/wapc/wapc-go"
 	"github.com/wapc/wapc-go/engines/wazero"
+	"github.com/wasmmock/wasm_mock_server/capabilities"
+	"github.com/wasmmock/wasm_mock_server/model"
+	Security "github.com/wasmmock/wasm_mock_server/security"
+	"github.com/wasmmock/wasm_mock_server/tcpproxy"
+	"github.com/wasmmock/wasm_mock_server/util"
 )
 
 func HandleAT(loop string, code []byte, isHttp bool, isHttpFiddlerAB bool, http_targetList []string, response *model.CallApiResponse, rw http.ResponseWriter, req *http.Request, rpcHandler RpcAble) {
@@ -136,7 +136,8 @@ func UnifiedV2(rpcHandler RpcAble) http.HandlerFunc {
 					}
 				}
 				if contain {
-					break
+					//break
+					continue
 				}
 				MockCommandMockUidMap.Store(t, uID)
 				http_targetList = append(http_targetList, t)
@@ -151,7 +152,8 @@ func UnifiedV2(rpcHandler RpcAble) http.HandlerFunc {
 					}
 				}
 				if contain {
-					break
+					//break
+					continue
 				}
 				MockCommandMockUidMap.Store(target, uID)
 				fiddlerBeforeRequestMap.Store(target, uID)

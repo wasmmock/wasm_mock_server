@@ -15,8 +15,8 @@ import (
 
 	"github.com/wasmmock/wasm_mock_server/util/postman"
 
-	"github.com/wasmmock/wasm_mock_server/util"
 	"github.com/andybalholm/brotli"
+	"github.com/wasmmock/wasm_mock_server/util"
 )
 
 type Response struct {
@@ -214,11 +214,30 @@ func HttpRequestRaw(req http.Request) (Response, RequestReceivedInMock, error) {
 
 	}
 	gzipReqBody, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		fmt.Println("ioutil.ReadAll err", err)
+	}
 	var reqReader io.ReadCloser
 	switch req.Header.Get("Content-Encoding") {
 	case "gzip":
 		reqReader, err = gzip.NewReader(bytes.NewBuffer(gzipReqBody))
-		defer reqReader.Close()
+		if err == nil {
+			defer reqReader.Close()
+		}
+	case "br":
+		var b = make([]byte, 60000)
+		n, nerr := brotli.NewReader(bytes.NewBuffer(gzipBody)).Read(b)
+		if nerr != nil {
+			fmt.Println("brotli err %s", nerr.Error())
+		} else {
+			defer reqReader.Close()
+		}
+		if n < 60000 {
+			data := b[:n]
+			reqReader = io.NopCloser(bytes.NewReader(data))
+		} else {
+			fmt.Println("n > 60000")
+		}
 	default:
 		reqReader = ioutil.NopCloser(bytes.NewReader(gzipBody))
 	}
