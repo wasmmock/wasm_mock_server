@@ -18,11 +18,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wasmmock/wasm_mock_server/capabilities"
-	"github.com/wasmmock/wasm_mock_server/util"
 	"github.com/andybalholm/brotli"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/google/martian"
+	"github.com/wasmmock/wasm_mock_server/capabilities"
+	"github.com/wasmmock/wasm_mock_server/util"
 )
 
 type Modifier struct {
@@ -459,6 +459,15 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 							resp.Body = ioutil.NopCloser(&b)
 							return nil
 						}
+					} else if httpRes.HttpBodyRaw != "" {
+						var b bytes.Buffer
+						w := gzip.NewWriter(&b)
+						w.Write([]byte(httpRes.HttpBodyRaw))
+						w.Close()
+						resp.Header.Set("Content-Length", strconv.Itoa(b.Len()))
+						resp.ContentLength = int64(b.Len())
+						resp.Body = ioutil.NopCloser(&b)
+						return nil
 					}
 				} else if strings.Contains(resp.Header.Get("Content-Encoding"), "br") {
 					if httpRes.HttpBody != nil {
@@ -469,10 +478,18 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 							w.Close()
 							resp.Header.Set("Content-Length", strconv.Itoa(b.Len()))
 							resp.ContentLength = int64(b.Len())
-							fmt.Println("ContentLength", resp.ContentLength)
 							resp.Body = ioutil.NopCloser(&b)
 							return nil
 						}
+					} else if httpRes.HttpBodyRaw != "" {
+						var b bytes.Buffer
+						w := brotli.NewWriter(&b)
+						w.Write([]byte(httpRes.HttpBodyRaw))
+						w.Close()
+						resp.Header.Set("Content-Length", strconv.Itoa(b.Len()))
+						resp.ContentLength = int64(b.Len())
+						resp.Body = ioutil.NopCloser(&b)
+						return nil
 					}
 				} else {
 					if httpRes.HttpBody != nil {
