@@ -11,8 +11,8 @@ import (
 	"github.com/wasmmock/wasm_mock_server/capabilities"
 	"github.com/wasmmock/wasm_mock_server/tcpproxy"
 
-	"github.com/wasmmock/wasm_mock_server/util"
 	"github.com/vmihailenco/msgpack"
+	"github.com/wasmmock/wasm_mock_server/util"
 )
 
 var hostCallSpecific = func(binding string, namespace string, operation string, payload []byte) ([]byte, error) {
@@ -25,6 +25,7 @@ func RegisterHostCall(f func(string, string, string, []byte) ([]byte, error)) {
 func hostCall(ctx context.Context, binding, namespace, operation string, payload []byte) ([]byte, error) {
 	// Route the payload to any custom functionality accordingly.
 	// You can even route to other waPC modules!!!
+	fmt.Println("namespace", namespace, "operation", operation)
 	switch namespace {
 	case "foo":
 		switch operation {

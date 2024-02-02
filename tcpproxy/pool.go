@@ -141,9 +141,19 @@ func PoolInit(uID string, portmap string, laddr, raddr *net.TCPAddr, Before_req,
 	var listener net.Listener
 	var nerr error
 	if is_tls {
-		config := tls.Config{InsecureSkipVerify: true}
-		config.Rand = rand.Reader
-		listener, nerr = net.Listen("tcp", laddr.String())
+		if cert, err := tls.LoadX509KeyPair("cert_folder/proxy-ca.pem", "cert_folder/proxy-ca.key"); err == nil {
+			config := tls.Config{
+				Certificates:       []tls.Certificate{cert},
+				InsecureSkipVerify: true}
+			config.Rand = rand.Reader
+			if listener, nerr = net.Listen("tcp", laddr.String()); nerr == nil {
+				listener = tls.NewListener(listener, &config)
+			} else {
+				listener, nerr = net.Listen("tcp", laddr.String())
+			}
+		} else {
+			listener, nerr = net.Listen("tcp", laddr.String())
+		}
 	} else {
 		listener, nerr = net.Listen("tcp", laddr.String())
 	}
