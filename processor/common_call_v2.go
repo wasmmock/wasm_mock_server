@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wasmmock/wasm_mock_server/util"
 	"github.com/google/uuid"
 	wapc "github.com/wapc/wapc-go"
 	"github.com/wapc/wapc-go/engines/wazero"
+	"github.com/wasmmock/wasm_mock_server/util"
 )
 
 func CallWasmV2(gw genericWriter, ws_clientid string) {

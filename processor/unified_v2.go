@@ -23,17 +23,31 @@ import (
 	"github.com/wasmmock/wasm_mock_server/util"
 )
 
-func HandleAT(loop string, code []byte, isHttp bool, isHttpFiddlerAB bool, http_targetList []string, response *model.CallApiResponse, rw http.ResponseWriter, req *http.Request, rpcHandler RpcAble) {
-	if isHttpFiddlerAB == false {
-		if loop != "0" {
-			req.Body = ioutil.NopCloser(bytes.NewBuffer(code))
-			CallV2(rw, req)
+func HandleAT(loop string, code []byte, isHttp bool, isHttpFiddlerAB bool, http_targetList []string, tcp_targetList []string, response *model.CallApiResponse, rw http.ResponseWriter, req *http.Request, rpcHandler RpcAble) {
+	if isHttp {
+		if isHttpFiddlerAB == false {
+			if loop != "0" {
+				req.Body = ioutil.NopCloser(bytes.NewBuffer(code))
+				CallV2(rw, req)
+			} else {
+				util.JsonResponse(rw, response)
+			}
 		} else {
-			util.JsonResponse(rw, response)
+			HandleHttpFiddlerAB(code, isHttpFiddlerAB, http_targetList, response, rw, req, rpcHandler)
 		}
 	} else {
-		HandleHttpFiddlerAB(code, isHttpFiddlerAB, http_targetList, response, rw, req, rpcHandler)
+		if isHttpFiddlerAB == false {
+			if loop != "0" {
+				req.Body = ioutil.NopCloser(bytes.NewBuffer(code))
+				CallV2(rw, req)
+			} else {
+				util.JsonResponse(rw, response)
+			}
+		} else {
+			HandleTcpFiddlerAB(code, isHttpFiddlerAB, http_targetList, response, rw, req, rpcHandler)
+		}
 	}
+
 }
 func HandleHttpFiddlerAB(code []byte, isHttpFiddlerAB bool, http_targetList []string, response *model.CallApiResponse, rw http.ResponseWriter, req *http.Request, rpcHandler RpcAble) {
 	if isHttpFiddlerAB {
@@ -47,7 +61,18 @@ func HandleHttpFiddlerAB(code []byte, isHttpFiddlerAB bool, http_targetList []st
 		util.JsonResponse(rw, response)
 	}
 }
-
+func HandleTcpFiddlerAB(code []byte, isTcpFiddlerAB bool, tcp_targetList []string, response *model.CallApiResponse, rw http.ResponseWriter, req *http.Request, rpcHandler RpcAble) {
+	if isTcpFiddlerAB {
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(code))
+		mock_targets := strings.Join(tcp_targetList, ",")
+		if len(mock_targets) > 0 {
+			req.URL.RawQuery += "&mock_targets=" + mock_targets
+		}
+		CallTcpFiddler(rpcHandler)(rw, req)
+	} else {
+		util.JsonResponse(rw, response)
+	}
+}
 func UnifiedV2(rpcHandler RpcAble) http.HandlerFunc {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		response := new(model.CallApiResponse)
@@ -124,6 +149,7 @@ func UnifiedV2(rpcHandler RpcAble) http.HandlerFunc {
 		var http_targetList = []string{}
 		var isHttp = false
 		var isHttpFiddlerAB = false
+		//var isTcpFiddlerAB = false
 		for _, target := range targetList {
 			if strings.Contains(target, "_http_modify_req") || strings.Contains(target, "_http_modify_res") {
 				isHttp = true
@@ -155,11 +181,16 @@ func UnifiedV2(rpcHandler RpcAble) http.HandlerFunc {
 					//break
 					continue
 				}
+				tcp_targetList = append(tcp_targetList, port_map)
+				http_targetList = append(http_targetList, port_map)
 				MockCommandMockUidMap.Store(target, uID)
 				fiddlerBeforeRequestMap.Store(target, uID)
 			} else if strings.Contains(target, "_http_fiddler_ab") {
 				isHttpFiddlerAB = true
+			} else if strings.Contains(target, "_tcp_fiddler_ab") {
+				isHttpFiddlerAB = true
 			}
+
 		}
 		for _, port_map := range tcp_targetList {
 			port_map_arr := strings.Split(port_map, "-:")
@@ -225,7 +256,7 @@ func UnifiedV2(rpcHandler RpcAble) http.HandlerFunc {
 		}
 		instanceref := util.NewSafeInstance(instance)
 		mockUidInstanceMap.Set(uID, &instanceref)
-		HandleAT(loop, code, isHttp, isHttpFiddlerAB, http_targetList, response, rw, req, rpcHandler)
+		HandleAT(loop, code, isHttp, isHttpFiddlerAB, http_targetList, tcp_targetList, response, rw, req, rpcHandler)
 		return
 	}
 }
