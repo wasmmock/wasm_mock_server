@@ -12,10 +12,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/wasmmock/wasm_mock_server/capabilities"
-	"github.com/wasmmock/wasm_mock_server/util"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/vmihailenco/msgpack"
+	"github.com/wasmmock/wasm_mock_server/capabilities"
+	"github.com/wasmmock/wasm_mock_server/util"
 )
 
 func Max(x, y uint32) uint32 {
@@ -329,10 +329,14 @@ func TcpFiddlerMockWasmBeforeReq(ctx context.Context, request, new_request inter
 				Laddr:   real_l_remote_addr,
 				Raddr:   real_r_local_addr,
 			}
-			p, _ := msgpack.Marshal(tcp_payload)
-			result, err := instance.Invoke(ctx, element_new+"_modify_req", p)
+			p, er := msgpack.Marshal(tcp_payload)
+			if er != nil {
+				fmt.Println("msgpack error", er.Error(), "element_new", element_new)
+
+			}
+			result, err := instance.Invoke(ctx, element_new+"_tcp_modify_req", p)
 			if err != nil {
-				fmt.Println("after _modify_req... element_new err", element_new, err.Error())
+				fmt.Println("after _modify_req... element_new err", element_new, err.Error(), "p", p)
 			}
 			fmt.Println("after _modify_req... element_new", element_new, len(p))
 			if bytes.Equal(result, []byte("/continue")) {
@@ -448,7 +452,7 @@ func TcpFiddlerMockWasmBeforeRes(ctx context.Context, response interface{}, elem
 				Raddr:   real_r_local_addr,
 			}
 			p, _ := msgpack.Marshal(tcp_payload)
-			result, err := instance.Invoke(ctx, element_new+"_modify_res", p)
+			result, err := instance.Invoke(ctx, element_new+"_tcp_modify_res", p)
 			if err != nil {
 				//return 0
 				fmt.Println("result, error", err)

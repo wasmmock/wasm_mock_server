@@ -18,9 +18,6 @@ import (
 	"github.com/wasmmock/wasm_mock_server/capabilities"
 	Security "github.com/wasmmock/wasm_mock_server/security"
 
-	"github.com/wasmmock/wasm_mock_server/logger"
-	"github.com/wasmmock/wasm_mock_server/model"
-	"github.com/wasmmock/wasm_mock_server/util"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/google/martian"
 	"github.com/google/uuid"
@@ -28,6 +25,9 @@ import (
 	"github.com/vmihailenco/msgpack"
 	wapc "github.com/wapc/wapc-go"
 	"github.com/wapc/wapc-go/engines/wazero"
+	"github.com/wasmmock/wasm_mock_server/logger"
+	"github.com/wasmmock/wasm_mock_server/model"
+	"github.com/wasmmock/wasm_mock_server/util"
 )
 
 type Bytes []byte
@@ -464,8 +464,8 @@ func CallFiddler(rpcHandler RpcAble) http.HandlerFunc {
 func CallTcpFiddler(rpcHandler RpcAble) http.HandlerFunc {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		command := ""
-		if len(req.URL.Query()["targets"]) > 0 {
-			command = req.URL.Query()["targets"][0]
+		if len(req.URL.Query()["mock_targets"]) > 0 {
+			command = req.URL.Query()["mock_targets"][0]
 		}
 		mockTargetsList := strings.Split(command, ",")
 		duration := ""

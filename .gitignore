@@ -1,2 +1,3 @@
 mov
 runner/cert_folder
+runner/__debug_bin
