@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -26,6 +27,7 @@ var removeQueue = make(chan capabilities.EntityWhole)
 var idMap safeIdMapStruct
 var replayIdMap safeIdMapStruct
 var TcpListenerMap map[string]net.Listener = make(map[string]net.Listener)
+var TcpTlsListenerMap map[string]net.Listener = make(map[string]net.Listener)
 
 func TcpRequest(requests []capabilities.TcpReq, portmap string) []capabilities.TcpReq {
 	var responderArr = []capabilities.TcpReq{}
@@ -107,19 +109,69 @@ func TcpMockTeardown(targetlist []string, MockCommandMockUidMap *util.SafeString
 			v.Close()
 			delete(TcpListenerMap, portmap)
 		}
+		if v, ok := TcpTlsListenerMap[portmap]; ok {
+			v.Close()
+			delete(TcpTlsListenerMap, portmap)
+		}
 		MockCommandMockUidMap.Delete(portmap)
 	}
 }
+func handleConnection(conn net.Conn, ch chan []byte) {
+	buf := make([]byte, 2000)
+	n, err := conn.Read(buf)
+	if err != nil {
+		log.Printf("Error reading from connection: %v", err)
+		return
+	}
 
+	data := buf[:n]
+	ch <- data
+}
+func isTLS(data []byte) bool {
+	// Check if the first few bytes match the TLS handshake header
+	if len(data) < 5 {
+		return false
+	}
+	return data[0] == 0x16 && data[1] >= 0x3 && data[1] <= 0x4
+}
 func PoolInit(uID string, portmap string, laddr, raddr *net.TCPAddr, Before_req, Before_res func([]byte, string, string, string, string) ([]byte, []capabilities.Entity), MockCommandMockUidMap *util.SafeStringMap, mockUidInstanceMap *util.SafeInstanceMap, wasmModule wapc.Module) {
-	//listener, nerr := net.ListenTCP("tcp", laddr)
-	// cert, err := tls.LoadX509KeyPair("cert_folder/proxy-ca.pem", "cert_folder/proxy-ca.key")
-	// if err != nil {
-	// 	log.Fatalf("server: loadkeys: %s", err)
-	// }
-	//config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	var listener net.Listener
+	var tls_listener net.Listener
+	var tls_dial net.Conn
+	var tls_listen net.Conn
+	tls_read_channel := make(chan []byte)
+	tls_write_channel := make(chan []byte)
+	if cert, err := tls.LoadX509KeyPair("cert_folder/proxy-ca.pem", "cert_folder/proxy-ca.key"); err == nil {
+		config := tls.Config{
+			Certificates:       []tls.Certificate{cert},
+			InsecureSkipVerify: true}
+		config.Rand = rand.Reader
+		if err := os.Remove(portmap + ".sock"); err != nil {
 
-	//processor.MockCommandUidMap.Store(portmap, uID)
+		}
+		if listeners, nerr := net.Listen("unix", portmap+".sock"); nerr == nil {
+			tls_listener = tls.NewListener(listeners, &config)
+			TcpTlsListenerMap[portmap] = tls_listener
+			go func() {
+				for {
+					lconn, err := tls_listener.Accept()
+					tls_listen = lconn
+					if err == nil {
+						handleConnection(lconn, tls_read_channel)
+					}
+				}
+			}()
+			go func() {
+				if l, nerr := net.Dial("unix", portmap+".sock"); nerr == nil {
+					tls_dial = l
+					for {
+						v := <-tls_write_channel
+						l.Write(v)
+					}
+				}
+			}()
+		}
+	}
 
 	//instance, err := wasmModule.Instantiate("wasi_unstable")
 	ctx := context.Background()
@@ -130,34 +182,36 @@ func PoolInit(uID string, portmap string, laddr, raddr *net.TCPAddr, Before_req,
 	safe_instance := util.NewSafeInstance(instance)
 
 	log.Println("after Instantiate")
-	var is_tls = false
-	is_tls_byte, ner := safe_instance.Invoke(ctx, "is_tls", []byte{})
-	if ner == nil {
-		is_tls_str := string(is_tls_byte)
-		if is_tls_str == "true" {
-			is_tls = true
-		}
-	}
-	var listener net.Listener
+	// var is_tls = false
+	// is_tls_byte, ner := safe_instance.Invoke(ctx, "is_tls", []byte{})
+	// if ner == nil {
+	// 	is_tls_str := string(is_tls_byte)
+	// 	if is_tls_str == "true" {
+	// 		is_tls = true
+	// 	}
+	// }
+
 	var nerr error
-	if is_tls {
-		if cert, err := tls.LoadX509KeyPair("cert_folder/proxy-ca.pem", "cert_folder/proxy-ca.key"); err == nil {
-			config := tls.Config{
-				Certificates:       []tls.Certificate{cert},
-				InsecureSkipVerify: true}
-			config.Rand = rand.Reader
-			if listener, nerr = net.Listen("tcp", laddr.String()); nerr == nil {
-				listener = tls.NewListener(listener, &config)
-			} else {
-				listener, nerr = net.Listen("tcp", laddr.String())
-			}
-		} else {
-			listener, nerr = net.Listen("tcp", laddr.String())
-		}
-	} else {
-		listener, nerr = net.Listen("tcp", laddr.String())
-	}
+	// if is_tls {
+	// 	if cert, err := tls.LoadX509KeyPair("cert_folder/proxy-ca.pem", "cert_folder/proxy-ca.key"); err == nil {
+	// 		config := tls.Config{
+	// 			Certificates:       []tls.Certificate{cert},
+	// 			InsecureSkipVerify: true}
+	// 		config.Rand = rand.Reader
+	// 		if listener, nerr = net.Listen("tcp", laddr.String()); nerr == nil {
+	// 			listener = tls.NewListener(listener, &config)
+	// 		} else {
+	// 			listener, nerr = net.Listen("tcp", laddr.String())
+	// 		}
+	// 	} else {
+	// 		listener, nerr = net.Listen("tcp", laddr.String())
+	// 	}
+	// } else {
+	// 	listener, nerr = net.Listen("tcp", laddr.String())
+	// }
+	listener, nerr = net.Listen("tcp", laddr.String())
 	if nerr == nil {
+		log.Println("listening on ", laddr.String())
 		TcpListenerMap[portmap] = listener
 	} else {
 		log.Println("before Instantiate listener err", laddr.String(), nerr.Error())
@@ -188,6 +242,8 @@ func PoolInit(uID string, portmap string, laddr, raddr *net.TCPAddr, Before_req,
 
 				go func() {
 					time.Sleep(2 * time.Second)
+					var is_tls = false
+					var tls_check_done = false
 					for {
 						buff := make([]byte, 20000)
 						n, err := lconn.Read(buff)
@@ -202,6 +258,15 @@ func PoolInit(uID string, portmap string, laddr, raddr *net.TCPAddr, Before_req,
 							return
 						}
 						b := buff[:n]
+						if !tls_check_done {
+							is_tls = isTLS(b)
+							tls_check_done = true
+						}
+						if is_tls {
+							tls_write_channel <- b
+							// tls_dial.Write(b)
+							b = <-tls_read_channel
+						}
 						mb, es := Before_req(b, portmap, l_remote_add, lconn.RemoteAddr().String(), "")
 						_ = es
 						for _, e := range es {
@@ -215,6 +280,14 @@ func PoolInit(uID string, portmap string, laddr, raddr *net.TCPAddr, Before_req,
 							if rconn, ok := TcpRconnSafe.Load(portmap + "_" + lconn.RemoteAddr().String()); ok {
 								if rconn, ok := rconn.(net.Conn); ok {
 									b := bytes.NewBuffer(mb)
+									if is_tls {
+										tls_listen.Write(mb)
+										buf := make([]byte, 2000)
+										if n, err := tls_dial.Read(buf); err == nil {
+											bu := buf[:n]
+											b = bytes.NewBuffer(bu)
+										}
+									}
 									n, er := b.WriteTo(rconn)
 									if er != nil {
 										log.Println("rconn er", er.Error())
