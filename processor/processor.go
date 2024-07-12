@@ -75,6 +75,7 @@ var httpMockServer http.Server = http.Server{
 }
 
 var httpMockCommandMap map[string]string = make(map[string]string)
+var httpIgnoreVec util.SafeStringMap = util.NewSafeStringMap()
 
 type httpMockChanProtocol struct {
 	action string

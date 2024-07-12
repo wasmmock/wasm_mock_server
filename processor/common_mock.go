@@ -390,6 +390,11 @@ func TcpFiddlerMockWasmBeforeReq(ctx context.Context, request, new_request inter
 	return []uint32{0}, []capabilities.Entity{}
 }
 func FiddlerMockWasmBeforeRes(ctx context.Context, request, response interface{}, element_new string, reqA *http.Request, request_index_in_report int64, skipReport bool) uint32 {
+	if reqA.Header.Get("Signature") != "" {
+
+		reqA.Header.Set("Signature", "super_signature_staging")
+		reqA.Header.Del("Accept-Encoding")
+	}
 	if mockUID, ok := MockCommandMockUidMap.Get(element_new); ok {
 		if instance, ok := mockUidInstanceMap.Get(mockUID); ok {
 			r := request.(*Bytes)

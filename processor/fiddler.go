@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	b64 "encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -71,6 +72,19 @@ func (e *Modifier) ModifyRequest(req *http.Request) error {
 	}
 	if len(req.URL.Path) > 0 {
 		fmt.Println("req.URL.Path", req.URL.Path)
+	} else {
+		return nil
+	}
+	var found = false
+	httpIgnoreVec.Range(func(key, value string) bool {
+		if strings.Contains(req.URL.Path, key) {
+			found = true
+			return true
+		}
+		return false
+	})
+	if found {
+		return nil
 	}
 	for key, value := range req.Header {
 		if key == "Proxy-Remote-Addr" {
@@ -102,6 +116,7 @@ func (e *Modifier) ModifyRequest(req *http.Request) error {
 		} else {
 			matches = strings.Contains(req.URL.Path, k)
 		}
+
 		if matches && len(req.URL.Path) > 0 {
 			httpReq := capabilities.RequestReceivedInMock{
 				//HttpProxyUrl: req.URL.Scheme + "://" + req.URL.Host,
@@ -117,10 +132,17 @@ func (e *Modifier) ModifyRequest(req *http.Request) error {
 					return err
 				}
 				var httpBody map[string]interface{} = make(map[string]interface{})
+				var httpBodyArr []interface{} = make([]interface{}, 0)
 				if err := json.Unmarshal(body, &httpBody); err == nil {
 					httpReq.HttpBody = httpBody
 				} else {
-					httpReq.HttpBodyRaw = string(body)
+					if err = json.Unmarshal(body, &httpBodyArr); err == nil {
+						httpBody["array"] = httpBodyArr
+						httpReq.HttpBody = httpBody
+					} else {
+						httpReq.HttpBodyRaw = b64.StdEncoding.EncodeToString(body)
+					}
+					//999
 				}
 			}
 
@@ -205,6 +227,7 @@ func (e *Modifier) ModifyRequest(req *http.Request) error {
 							safeReports.SetStep(uID, curlStep, int(request_index_in_report))
 						}
 					}
+
 					gctx := martian.NewContext(req)
 					gctx.Set("ReqA", httpReq)
 					gctx.Set("request_index_in_report", request_index_in_report)
@@ -238,6 +261,17 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 		return nil
 	}
 	if len(req.URL.Path) == 0 {
+		return nil
+	}
+	var found = false
+	httpIgnoreVec.Range(func(key, value string) bool {
+		if strings.Contains(req.URL.Path, key) {
+			found = true
+			return true
+		}
+		return false
+	})
+	if found {
 		return nil
 	}
 	var readable_resp_body = ""
@@ -278,16 +312,16 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 			if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
 				reader, err = gzip.NewReader(bytes.NewBuffer(gzipBody))
 			} else if strings.Contains(resp.Header.Get("Content-Encoding"), "br") {
-				var b = make([]byte, 60000)
+				var b = make([]byte, 2000000)
 				n, nerr := brotli.NewReader(bytes.NewBuffer(gzipBody)).Read(b)
 				if nerr != nil {
 					fmt.Println("brotli err %s", nerr.Error())
 				}
-				if n < 60000 {
+				if n < 2000000 {
 					data := b[:n]
 					reader = io.NopCloser(bytes.NewReader(data))
 				} else {
-					fmt.Println("n > 60000")
+					fmt.Println("n > 2000000")
 					return nil
 				}
 
@@ -320,8 +354,6 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 					StatusCode:  strconv.Itoa(resp.StatusCode),
 					HttpRequest: capabilities.RequestReceivedInMock{},
 				}
-
-				readable_resp_body = string(body)
 			} else {
 				readable_resp_body = string(body)
 
@@ -335,6 +367,7 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 				}
 			}
 			httpRes.HttpRequest.HttpPath = resp.Request.URL.Path
+			httpRes.HttpRequest.HttpProxyUrl = req.Host
 			httpRes.HttpRequest.HttpScheme = resp.Request.URL.Scheme
 			httpRes.HttpRequest.HttpHeader = make(http.Header, len(resp.Request.Header))
 			httpRes.HttpRequest.HttpParam = make(map[string][]string, len(resp.Request.URL.Query()))
@@ -356,10 +389,17 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 			ctx := context.Background()
 			if reqAinterface, ok := gctx.Get("ReqA"); ok {
 				reqA := reqAinterface.(capabilities.RequestReceivedInMock)
-				payload, err := json.Marshal(reqA.HttpBody)
-				if err != nil {
-					return err
+				var payload []byte
+				if reqA.HttpBodyRaw != "" {
+					payload, _ = b64.StdEncoding.DecodeString(reqA.HttpBodyRaw)
+				} else {
+					if v, ok := reqA.HttpBody["array"]; ok {
+						payload, _ = json.Marshal(v)
+					} else {
+						payload, _ = json.Marshal(reqA.HttpBody)
+					}
 				}
+
 				var b bytes.Buffer
 				if strings.Contains(req.Header.Get("Content-Encoding"), "gzip") {
 					w := gzip.NewWriter(&b)
@@ -373,6 +413,9 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 					b.Write(payload)
 				}
 				body, err := ioutil.ReadAll(&b)
+				if err != nil {
+					return err
+				}
 				data := bytes.NewReader(body)
 				p := url.PathEscape(req.RequestURI)
 				p1 := strings.ReplaceAll(p, "%2F", "/")
@@ -398,7 +441,10 @@ func (e *Modifier) ModifyResponse(resp *http.Response) error {
 						new_reqA_RawQuery = k + "=" + v[0]
 					}
 				}
+				new_reqA.URL.RawQuery = new_reqA_RawQuery
+				new_reqA.URL.Path = reqA.HttpPath
 				new_reqA.RequestURI = reqA.HttpPath + "?" + new_reqA_RawQuery
+				new_reqA.URL.RawPath = new_reqA_RawQuery
 				for cookie_name, cookie_value := range reqA.HttpCookie {
 					c := cookie_name + "=" + cookie_value
 					expire := time.Now().AddDate(0, 0, 1)

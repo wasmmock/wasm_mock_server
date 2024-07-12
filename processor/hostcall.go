@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"crypto/md5"
 	"encoding/binary"
 	"fmt"
 	"strconv"
@@ -179,6 +180,13 @@ func hostCall(ctx context.Context, binding, namespace, operation string, payload
 
 			}
 			return []byte{}, nil
+		}
+	case "crypto":
+		switch operation {
+		case "md5sum":
+			sig := md5.Sum(payload)
+			slice := sig[:]
+			return slice, nil
 		}
 	case "selenium":
 		switch operation {

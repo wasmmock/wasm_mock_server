@@ -210,38 +210,40 @@ func HttpRequestRaw(req http.Request) (Response, RequestReceivedInMock, error) {
 	for _, c := range req.Cookies() {
 		cookiesReq[c.Name] = c.Value
 	}
-	if err != nil {
-
-	}
 	gzipReqBody, err := ioutil.ReadAll(req.Body)
+
 	if err != nil {
 		fmt.Println("ioutil.ReadAll err", err)
 	}
-	var reqReader io.ReadCloser
-	switch req.Header.Get("Content-Encoding") {
-	case "gzip":
-		reqReader, err = gzip.NewReader(bytes.NewBuffer(gzipReqBody))
-		if err == nil {
-			defer reqReader.Close()
+	reqBody := make([]byte, 0)
+	if len(gzipReqBody) > 0 {
+		var reqReader io.ReadCloser
+		switch req.Header.Get("Content-Encoding") {
+		case "gzip":
+			reqReader, err = gzip.NewReader(bytes.NewBuffer(gzipReqBody))
+			if err == nil {
+				defer reqReader.Close()
+			}
+		case "br":
+			var b = make([]byte, 60000)
+			n, nerr := brotli.NewReader(bytes.NewBuffer(gzipBody)).Read(b)
+			if nerr != nil {
+				fmt.Println("brotli err %s", nerr.Error())
+			} else {
+				defer reqReader.Close()
+			}
+			if n < 60000 {
+				data := b[:n]
+				reqReader = io.NopCloser(bytes.NewReader(data))
+			} else {
+				fmt.Println("n > 60000")
+			}
+		default:
+			reqReader = ioutil.NopCloser(bytes.NewReader(gzipBody))
 		}
-	case "br":
-		var b = make([]byte, 60000)
-		n, nerr := brotli.NewReader(bytes.NewBuffer(gzipBody)).Read(b)
-		if nerr != nil {
-			fmt.Println("brotli err %s", nerr.Error())
-		} else {
-			defer reqReader.Close()
-		}
-		if n < 60000 {
-			data := b[:n]
-			reqReader = io.NopCloser(bytes.NewReader(data))
-		} else {
-			fmt.Println("n > 60000")
-		}
-	default:
-		reqReader = ioutil.NopCloser(bytes.NewReader(gzipBody))
+		reqBody, err = ioutil.ReadAll(reqReader)
 	}
-	reqBody, err := ioutil.ReadAll(reqReader)
+
 	httpPath := req.URL.Path
 	var http_param = make(map[string][]string)
 	for k, v := range req.URL.Query() {

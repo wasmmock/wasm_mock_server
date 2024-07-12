@@ -115,9 +115,20 @@ func UnifiedV2(rpcHandler RpcAble) http.HandlerFunc {
 		added_fn, err := instance.Invoke(ctx, "add_functions", []byte{})
 
 		targets := string(added_fn)
+
 		fmt.Println("added_fn", targets)
+		ignore_fn, err := instance.Invoke(ctx, "http_ignore", []byte{})
+
+		ignore_target := string(ignore_fn)
+		ignore_vec := strings.Split(ignore_target, ",")
+		for _, v := range ignore_vec {
+			if len(v) > 0 {
+				httpIgnoreVec.Store(v, "")
+			}
+		}
+
 		if err == nil {
-			response.Header.Message = "added_fn " + targets
+			response.Header.Message = "added_fn " + targets + " | ignore" + ignore_target
 		} else {
 			response.Header.Message = err.Error()
 			fmt.Println("added_fn err", err.Error())
