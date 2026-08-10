@@ -279,7 +279,7 @@ func CallMockHTTP(mock_http_type string) http.HandlerFunc {
 						for key, element := range res.HttpCookie {
 							expire := time.Now().AddDate(0, 0, 1)
 							c := key + "=" + element
-							cookie := &http.Cookie{key, element, "/", "www.domain.com", expire, expire.Format(time.UnixDate), 86400, true, true, 0, c, []string{c}}
+							cookie := &http.Cookie{Name: key, Value: element, Path: "/", Domain: "www.domain.com", Expires: expire, RawExpires: expire.Format(time.UnixDate), MaxAge: 86400, Secure: true, HttpOnly: true, SameSite: http.SameSiteDefaultMode, Raw: c, Unparsed: []string{c}}
 							http.SetCookie(rw, cookie)
 						}
 					}
@@ -312,7 +312,7 @@ func CallMockHTTP(mock_http_type string) http.HandlerFunc {
 							if !found {
 								c := cookie_name + "=" + cookie_value
 								expire := time.Now().AddDate(0, 0, 1)
-								cookie := &http.Cookie{cookie_name, cookie_value, "/", req.Host, expire, expire.Format(time.UnixDate), 86400, true, true, 0, c, []string{c}}
+								cookie := &http.Cookie{Name: cookie_name, Value: cookie_value, Path: "/", Domain: req.Host, Expires: expire, RawExpires: expire.Format(time.UnixDate), MaxAge: 86400, Secure: true, HttpOnly: true, SameSite: http.SameSiteDefaultMode, Raw: c, Unparsed: []string{c}}
 								new_req.AddCookie(cookie)
 							}
 						}
