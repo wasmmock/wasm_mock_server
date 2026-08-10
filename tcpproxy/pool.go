@@ -187,7 +187,24 @@ func PoolInit(uID string, portmap string, laddr, raddr *net.TCPAddr, Before_req,
 				TcpLconnSafe.Store(portmap+"_"+l_remote_add+"_"+lconn.RemoteAddr().String(), lconn)
 
 				go func() {
-					time.Sleep(2 * time.Second)
+					// ConnectR dials upstream concurrently, and the write below
+					// needs that connection. This used to be a flat 2s sleep,
+					// which delayed EVERY proxied handshake by two seconds
+					// (visible as a 2.0s time-to-101 against an instant direct
+					// connection) and still raced whenever the dial took longer.
+					// Wait for the connection itself instead.
+					rconnKey := portmap + "_" + lconn.RemoteAddr().String()
+					deadline := time.Now().Add(10 * time.Second)
+					for {
+						if _, ok := TcpRconnSafe.Load(rconnKey); ok {
+							break
+						}
+						if time.Now().After(deadline) {
+							log.Println("upstream never came up for", rconnKey)
+							return
+						}
+						time.Sleep(2 * time.Millisecond)
+					}
 					for {
 						buff := make([]byte, 20000)
 						n, err := lconn.Read(buff)
@@ -202,7 +219,20 @@ func PoolInit(uID string, portmap string, laddr, raddr *net.TCPAddr, Before_req,
 							return
 						}
 						b := buff[:n]
-						mb, es := Before_req(b, portmap, l_remote_add, lconn.RemoteAddr().String(), "")
+						// The wasm guest keys its per-connection state on
+						// "{Laddr}-{Raddr}". ConnectR passes the upstream's local
+						// address as Raddr, so passing "" here put the two
+						// directions of one connection under DIFFERENT keys —
+						// two half-initialised channels per connection, and every
+						// client sharing the single "{client}-" request key.
+						// Use the same address the response side reports.
+						actual_r_local_add := ""
+						if rc, ok := TcpRconnSafe.Load(rconnKey); ok {
+							if rc, ok := rc.(net.Conn); ok {
+								actual_r_local_add = rc.LocalAddr().String()
+							}
+						}
+						mb, es := Before_req(b, portmap, l_remote_add, lconn.RemoteAddr().String(), actual_r_local_add)
 						_ = es
 						for _, e := range es {
 							if e.Id != "" {
